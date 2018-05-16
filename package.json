@@ -1,0 +1,21 @@
+{
+  "name": "simulationsystem-backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^0.14.0",
+    "@google/maps": "^0.4.6",
+    "@mapbox/polyline": "^1.0.0",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "express": "~4.16.0",
+    "googlemapsutil": "^0.1.7",
+    "http-errors": "~1.6.2",
+    "morgan": "~1.9.0",
+    "pug": "2.0.0-beta11",
+    "threads": "^0.11.0"
+  }
+}
