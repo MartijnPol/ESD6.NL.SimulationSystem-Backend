@@ -15,9 +15,8 @@ class CartrackerService {
      */
     static save(CarTracker) {
         return firestore.collection(collectionPath).doc(CarTracker.id).set({
-            isDriving: CarTracker.isDriving,
             manufacturer: CarTracker.manufacturer,
-            currentLocation: CarTracker.currentLocation
+            lastLocation: CarTracker.lastLocation
         }).then(function (error) {
             console.log(error);
         });
