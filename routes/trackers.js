@@ -51,6 +51,16 @@ router.get('/:id', function (req, res, next) {
 });
 
 /**
+ * DELETE: Deletes a CarTracker from the database
+ */
+router.delete('/:id', function (req, res, next) {
+
+    const id = req.params.id;
+    res.send(CarTrackerService.deleteById(id));
+
+});
+
+/**
  * GET: START new route for specific CarTracker
  */
 router.get('/:id/start', function (req, res, next) {

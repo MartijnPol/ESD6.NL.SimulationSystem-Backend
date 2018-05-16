@@ -30,12 +30,20 @@ class CartrackerService {
     }
 
     /**
-     * Function to find a specific CarTracker by the given ID
+     * Function to find a specific CarTracker by it's ID
      * @param id of the CarTracker
      */
     static findById(id) {
         const docReference = firestore.collection(collectionPath).doc(id);
         return docReference.get();
+    }
+
+    /**
+     * Function to delete a specific CarTracker by it's id
+     * @param id of the CarTracker
+     */
+    static deleteById(id) {
+        return firestore.collection(collectionPath).doc(id).delete();
     }
 }
 
