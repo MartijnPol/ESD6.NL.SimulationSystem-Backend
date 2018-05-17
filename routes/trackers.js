@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const broadcastMessage = require('../websocket');
+
 const CarTracker = require('../models/cartracker.js');
 const Location = require('../models/location.js');
 const CarTrackerService = require('../services/cartracker-service.js');
@@ -12,7 +14,8 @@ router.post('/', function (req, res, next) {
     const manufacturer = req.body.manufacturer;
     const id = req.body.id;
 
-    let newCarTracker = new CarTracker(id, manufacturer, new Location(null, null));
+    let newCarTracker = new CarTracker(id, false, manufacturer, new Location(null, null));
+    broadcastMessage('added');
     res.send(CarTrackerService.save(newCarTracker).then(result => console.log(result)));
 
 });
@@ -26,7 +29,7 @@ router.get('/', function (req, res, next) {
         const carTrackers = [];
         snapshot.forEach(function (doc) {
             const data = doc.data();
-            carTrackers.push(new CarTracker(doc.id, data.manufacturer, data.lastLocation));
+            carTrackers.push(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation));
         });
         res.send(carTrackers);
     });
@@ -43,7 +46,7 @@ router.get('/:id', function (req, res, next) {
     CarTrackerService.findById(id).then(function (doc) {
         if (doc.exists) {
             const data = doc.data();
-            res.send(new CarTracker(doc.id, data.manufacturer, data.lastLocation));
+            res.send(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation));
         } else {
             res.status(404).send('Requested document is not found.');
         }
@@ -57,6 +60,7 @@ router.get('/:id', function (req, res, next) {
 router.delete('/:id', function (req, res, next) {
 
     const id = req.params.id;
+    broadcastMessage('deleted');
     res.send(CarTrackerService.deleteById(id));
 
 });
@@ -73,7 +77,7 @@ router.get('/:id/start', function (req, res, next) {
     CarTrackerService.findById(id).then(function (doc) {
         if (doc.exists) {
             const data = doc.data();
-            const carTracker = new CarTracker(doc.id, data.manufacturer, data.lastLocation);
+            const carTracker = new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation);
             carTracker.startRoute(origin, destination);
             res.send('CarTracker ' + id + ' started driving from ' + origin + " to " + destination + ".");
         } else {

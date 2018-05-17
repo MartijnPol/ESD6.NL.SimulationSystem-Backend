@@ -1,5 +1,4 @@
 const Firestore = require('@google-cloud/firestore');
-
 const firestore = new Firestore({
     projectId: 'simulationsystem-1524652497697',
     keyFilename: 'firestore-keys.json',
@@ -16,6 +15,7 @@ class CartrackerService {
     static save(CarTracker) {
         return firestore.collection(collectionPath).doc(CarTracker.id).set({
             manufacturer: CarTracker.manufacturer,
+            isDriving: CarTracker.isDriving,
             lastLocation: JSON.parse(JSON.stringify(CarTracker.lastLocation))
         }).then(function (error) {
             console.log(error);
