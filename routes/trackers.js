@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CarTracker = require('../models/cartracker.js');
+const Location = require('../models/location.js');
 const CarTrackerService = require('../services/cartracker-service.js');
 
 /**
@@ -11,7 +12,7 @@ router.post('/', function (req, res, next) {
     const manufacturer = req.body.manufacturer;
     const id = req.body.id;
 
-    let newCarTracker = new CarTracker(id, manufacturer, null);
+    let newCarTracker = new CarTracker(id, manufacturer, new Location(null, null));
     res.send(CarTrackerService.save(newCarTracker).then(result => console.log(result)));
 
 });
