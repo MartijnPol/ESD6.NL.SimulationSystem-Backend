@@ -1,4 +1,5 @@
 const Firestore = require('@google-cloud/firestore');
+const broadcastMessage = require('../websocket');
 const firestore = new Firestore({
     projectId: 'simulationsystem-1524652497697',
     keyFilename: 'firestore-keys.json',
@@ -6,7 +7,7 @@ const firestore = new Firestore({
 
 const collectionPath = 'CarTrackers';
 
-class CartrackerService {
+class CarTrackerService {
 
     /**
      * Function to add a given CarTracker to Firestore
@@ -17,8 +18,8 @@ class CartrackerService {
             manufacturer: CarTracker.manufacturer,
             isDriving: CarTracker.isDriving,
             lastLocation: JSON.parse(JSON.stringify(CarTracker.lastLocation))
-        }).then(function (error) {
-            console.log(error);
+        }).then(function () {
+            broadcastMessage("added");
         });
     }
 
@@ -39,12 +40,41 @@ class CartrackerService {
     }
 
     /**
+     * Function to update the lastLocation of a given CarTrackerId
+     * @param id of the CarTracker
+     * @param isDriving whether the CarTracker is currently driving
+     * @param lastLocation is the new lastLocation of the given CarTracker
+     */
+    static updateLastLocation(id, lastLocation) {
+        firestore.collection(collectionPath).doc(id).update({
+            isDriving: true,
+            lastLocation: JSON.parse(JSON.stringify(lastLocation))
+        }).then(function () {
+            broadcastMessage('updated');
+        });
+    }
+
+    /**
+     * Stop the driving status of a given CarTracker
+     * @param id of the specific CarTracker
+     */
+    static stopDriving(id) {
+        firestore.collection(collectionPath).doc(id).update({
+            isDriving: false
+        }).then(function () {
+            broadcastMessage('updated');
+        });
+    }
+
+    /**
      * Function to delete a specific CarTracker by it's id
      * @param id of the CarTracker
      */
     static deleteById(id) {
-        return firestore.collection(collectionPath).doc(id).delete();
+        firestore.collection(collectionPath).doc(id).delete().then(function () {
+            broadcastMessage("deleted");
+        });
     }
 }
 
-module.exports = CartrackerService;
+module.exports = CarTrackerService;

@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const broadcastMessage = require('../websocket');
 
 const CarTracker = require('../models/cartracker.js');
 const Location = require('../models/location.js');
 const CarTrackerService = require('../services/cartracker-service.js');
+const polyline = require('@mapbox/polyline');
+const maps = require('@google/maps').createClient({
+    key: 'AIzaSyBECZDHHuxDsGezIfvZG2vEtAdLBz1B10I'
+});
 
 /**
  * POST: Add new car to the system
@@ -15,7 +18,6 @@ router.post('/', function (req, res, next) {
     const id = req.body.id;
 
     let newCarTracker = new CarTracker(id, false, manufacturer, new Location(null, null));
-    broadcastMessage('added');
     res.send(CarTrackerService.save(newCarTracker).then(result => console.log(result)));
 
 });
@@ -48,7 +50,7 @@ router.get('/:id', function (req, res, next) {
             const data = doc.data();
             res.send(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation));
         } else {
-            res.status(404).send('Requested document is not found.');
+            res.status(404).send('Requested CarTracker has not been found');
         }
     });
 
@@ -58,11 +60,8 @@ router.get('/:id', function (req, res, next) {
  * DELETE: Deletes a CarTracker from the database
  */
 router.delete('/:id', function (req, res, next) {
-
     const id = req.params.id;
-    broadcastMessage('deleted');
     res.send(CarTrackerService.deleteById(id));
-
 });
 
 /**
@@ -76,15 +75,44 @@ router.get('/:id/start', function (req, res, next) {
 
     CarTrackerService.findById(id).then(function (doc) {
         if (doc.exists) {
-            const data = doc.data();
-            const carTracker = new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation);
-            carTracker.startRoute(origin, destination);
+            startRoute(doc.id, origin, destination);
             res.send('CarTracker ' + id + ' started driving from ' + origin + " to " + destination + ".");
         } else {
-            res.status(404).send('Requested document is not found.');
+            res.status(404).send('Requested CarTracker has not been found');
         }
     });
 
 });
+
+/**
+ * Start route from a given origin and destination
+ * @param origin is the start of the route in a LatLng string format
+ * @param destination is the destination of the route in a LatLng string format
+ */
+function startRoute(id, origin, destination) {
+
+    maps.directions({origin: origin, destination: destination, mode: "driving"}, function (err, response) {
+        if (!err) {
+
+            const duration = response.json.routes[0].legs[0].duration.value;
+            const polylinePoints = response.json.routes[0].overview_polyline.points;
+            const latLongArray = polyline.decode(polylinePoints);
+            const timeBetweenLatLong = Math.round((duration / latLongArray.length));
+
+            const updateLocationInterval = setInterval(function () {
+                const latLong = latLongArray.shift();
+                if (latLong != null) {
+                    const newLocation = new Location(latLong[0], latLong[1]);
+                    CarTrackerService.updateLastLocation(id, newLocation);
+                }
+                else {
+                    CarTrackerService.stopDriving(id);
+                    clearInterval(updateLocationInterval);
+                }
+            }, (timeBetweenLatLong * 1000));
+
+        }
+    });
+}
 
 module.exports = router;
