@@ -51,6 +51,9 @@ class CarTrackerService {
             lastLocation: JSON.parse(JSON.stringify(lastLocation))
         }).then(function () {
             broadcastMessage('updated');
+            return true;
+        }).catch(function () {
+            return false;
         });
     }
 

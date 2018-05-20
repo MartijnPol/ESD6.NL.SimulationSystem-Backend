@@ -99,11 +99,17 @@ function startRoute(id, origin, destination) {
             const latLongArray = polyline.decode(polylinePoints);
             const timeBetweenLatLong = Math.round((duration / latLongArray.length));
 
+            const latLong = latLongArray.shift();
+            const newLocation = new Location(latLong[0], latLong[1]);
+            CarTrackerService.updateLastLocation(id, newLocation);
+
             const updateLocationInterval = setInterval(function () {
                 const latLong = latLongArray.shift();
                 if (latLong != null) {
                     const newLocation = new Location(latLong[0], latLong[1]);
-                    CarTrackerService.updateLastLocation(id, newLocation);
+                    if (CarTrackerService.updateLastLocation(id, newLocation) === false) {
+                        clearInterval(updateLocationInterval);
+                    }
                 }
                 else {
                     CarTrackerService.stopDriving(id);
