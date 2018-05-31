@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const socket = new WebSocket.Server({port: 3500});
+const socket = new WebSocket.Server({port: 3500, host: '0.0.0.0'});
 
 /**
  * Broadcast a message to all active listeners
