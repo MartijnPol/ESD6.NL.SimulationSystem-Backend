@@ -4,9 +4,30 @@ pipeline {
         nodejs 'node'
     }
     stages {
-        stage ('Initialize') {
+        stage ('build-docker-image') {
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'release'
+                }
+            }
             steps {
-                sh 'echo hoi'
+                sh 'docker build -t simulation-backend .'
+                sh 'docker tag simulation-backend:latest esd6nl/sim-backend'
+            }
+        }
+        stage ('push-docker-image') {
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'release'
+                }
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'dockerPassword', usernameVariable: 'dockerUser')]) {
+                                    sh "docker login -u ${env.dockerUser} -p ${env.dockerPassword}"
+                                    sh 'docker push esd6nl/sim-backend'
+                            }
             }
         }
     }
