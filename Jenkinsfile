@@ -8,4 +8,11 @@ pipeline {
              sh 'npm --version'
          }
     }
+    stages {
+        stage ('Initialize') {
+            steps {
+                sh 'echo hoi'
+            }
+        }
+    }
 }
