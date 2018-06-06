@@ -17,7 +17,8 @@ class CarTrackerService {
         return firestore.collection(collectionPath).doc(CarTracker.id).set({
             manufacturer: CarTracker.manufacturer,
             isDriving: CarTracker.isDriving,
-            lastLocation: JSON.parse(JSON.stringify(CarTracker.lastLocation))
+            lastLocation: JSON.parse(JSON.stringify(CarTracker.lastLocation)),
+            metersDriven: 0
         }).then(function () {
             broadcastMessage("added");
         });
@@ -42,18 +43,24 @@ class CarTrackerService {
     /**
      * Function to update the lastLocation of a given CarTrackerId
      * @param id of the CarTracker
-     * @param isDriving whether the CarTracker is currently driving
      * @param lastLocation is the new lastLocation of the given CarTracker
+     * @param meters are the meters of the Pope
      */
-    static updateLastLocation(id, lastLocation) {
-        firestore.collection(collectionPath).doc(id).update({
-            isDriving: true,
-            lastLocation: JSON.parse(JSON.stringify(lastLocation))
-        }).then(function () {
-            broadcastMessage('updated');
-            return true;
-        }).catch(function () {
-            return false;
+    static updateCarTracker(id, lastLocation, meters) {
+        this.findById(id).then(function (doc) {
+            if (doc.exists) {
+                const newMetersDriven = doc.data().metersDriven + meters;
+                firestore.collection(collectionPath).doc(id).update({
+                    isDriving: true,
+                    lastLocation: JSON.parse(JSON.stringify(lastLocation)),
+                    metersDriven: newMetersDriven
+                }).then(function () {
+                    broadcastMessage('updated');
+                    return true;
+                }).catch(function () {
+                    return false;
+                });
+            }
         });
     }
 

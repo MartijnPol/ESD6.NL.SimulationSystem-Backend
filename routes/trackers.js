@@ -4,6 +4,7 @@ const router = express.Router();
 const CarTracker = require('../models/cartracker.js');
 const Location = require('../models/location.js');
 const CarTrackerService = require('../services/cartracker-service.js');
+const DisplacementService = require('../services/displacement-service.js');
 const polyline = require('@mapbox/polyline');
 const maps = require('@google/maps').createClient({
     key: 'AIzaSyBECZDHHuxDsGezIfvZG2vEtAdLBz1B10I'
@@ -17,7 +18,7 @@ router.post('/', function (req, res, next) {
     const manufacturer = req.body.manufacturer;
     const id = req.body.id;
 
-    let newCarTracker = new CarTracker(id, false, manufacturer, new Location(null, null));
+    let newCarTracker = new CarTracker(id, false, manufacturer, new Location(null, null), 0);
     res.send(CarTrackerService.save(newCarTracker).then(result => console.log(result)));
 
 });
@@ -31,7 +32,7 @@ router.get('/', function (req, res, next) {
         const carTrackers = [];
         snapshot.forEach(function (doc) {
             const data = doc.data();
-            carTrackers.push(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation));
+            carTrackers.push(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation, data.metersDriven));
         });
         res.send(carTrackers);
     });
@@ -48,7 +49,7 @@ router.get('/:id', function (req, res, next) {
     CarTrackerService.findById(id).then(function (doc) {
         if (doc.exists) {
             const data = doc.data();
-            res.send(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation));
+            res.send(new CarTracker(doc.id, data.isDriving, data.manufacturer, data.lastLocation, data.metersDriven));
         } else {
             res.status(404).send('Requested CarTracker has not been found');
         }
@@ -94,21 +95,27 @@ function startRoute(id, origin, destination) {
     maps.directions({origin: origin, destination: destination, mode: "driving"}, function (err, response) {
         if (!err) {
 
+            const distance = response.json.routes[0].legs[0].distance.value;
             const duration = response.json.routes[0].legs[0].duration.value;
             const polylinePoints = response.json.routes[0].overview_polyline.points;
             const latLongArray = polyline.decode(polylinePoints);
             const timeBetweenLatLong = Math.round((duration / latLongArray.length));
+            const metersBetweenLatLong = Math.round(distance / latLongArray.length);
 
             const latLong = latLongArray.shift();
             const newLocation = new Location(latLong[0], latLong[1]);
-            CarTrackerService.updateLastLocation(id, newLocation);
+            CarTrackerService.updateCarTracker(id, newLocation, metersBetweenLatLong);
+            DisplacementService.pushCarTrackerRule(id, newLocation.lat, newLocation.lng, metersBetweenLatLong);
 
             const updateLocationInterval = setInterval(function () {
                 const latLong = latLongArray.shift();
                 if (latLong != null) {
                     const newLocation = new Location(latLong[0], latLong[1]);
-                    if (CarTrackerService.updateLastLocation(id, newLocation) === false) {
+                    if (CarTrackerService.updateCarTracker(id, newLocation, metersBetweenLatLong) === false) {
                         clearInterval(updateLocationInterval);
+                    }
+                    else {
+                        DisplacementService.pushCarTrackerRule(id, newLocation.lat, newLocation.lng, metersBetweenLatLong);
                     }
                 }
                 else {
