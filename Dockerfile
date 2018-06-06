@@ -11,5 +11,5 @@ RUN npm install --only=production
 # Bundle app source
 COPY . .
 
-EXPOSE 3000 8082
+EXPOSE 3000 3500
 CMD [ "npm", "start" ]
