@@ -10,7 +10,7 @@ class DisplacementService {
      * @param metersDriven is the amount of metersDriven
      */
     static pushCarTrackerRule(id, lat, lon, metersDriven) {
-        unirest.post('http://localhost:8080/DisplacementSystem/api/CarTrackers/AddRule')
+        unirest.post('http://192.168.25.122:77/DisplacementSystem/api/CarTrackers/AddRule')
             .headers({'Content-Type': 'application/json'})
             .send({
                 "id": id,
