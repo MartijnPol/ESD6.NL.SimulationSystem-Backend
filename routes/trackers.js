@@ -15,6 +15,12 @@ const maps = require('@google/maps').createClient({
  */
 router.post('/', function (req, res, next) {
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
     const manufacturer = req.body.manufacturer;
     const id = req.body.id;
 
@@ -27,6 +33,12 @@ router.post('/', function (req, res, next) {
  * Get all cars in the database
  */
 router.get('/', function (req, res, next) {
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
 
     CarTrackerService.getAll().then(function (snapshot) {
         const carTrackers = [];
@@ -46,6 +58,12 @@ router.get('/:id', function (req, res, next) {
 
     const id = req.params.id;
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
     CarTrackerService.findById(id).then(function (doc) {
         if (doc.exists) {
             const data = doc.data();
@@ -62,6 +80,12 @@ router.get('/:id', function (req, res, next) {
  */
 router.delete('/:id', function (req, res, next) {
     const id = req.params.id;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
     res.send(CarTrackerService.deleteById(id));
 });
 
@@ -74,6 +98,12 @@ router.get('/:id/start', function (req, res, next) {
     const origin = req.query.origin;
     const destination = req.query.destination;
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    
     CarTrackerService.findById(id).then(function (doc) {
         if (doc.exists) {
             startRoute(doc.id, origin, destination);
